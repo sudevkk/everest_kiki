@@ -1,3 +1,20 @@
+/*
+	 CMD cost
+	   dommand line tool to generate delivery cost for the given number of packages
+
+	   usage:
+		cost -no XX -basecost XX
+
+		Parameters:-
+			no : The number of packages to be considered
+			basecost: The basecost of delivery, same for all packages
+
+		The tool will next prompt and accepts further inputs as formatted below,
+
+		PackageID Weight Distance Offercode
+
+		The above will need to be entered, repeteadly based on the original input
+*/
 package main
 
 import (
@@ -9,6 +26,7 @@ import (
 	"github.com/sudevkk/everest_kiki/internal/transport"
 )
 
+// Temp struct to hold the inputs
 type costInputs struct {
 	packageID string
 	weight    float64

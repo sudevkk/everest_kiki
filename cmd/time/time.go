@@ -1,3 +1,23 @@
+/*
+	 CMD Time
+	   dommand line tool to generate delivery cost and times for the given number of packages
+
+	   usage:
+		time -no XX -basecost XX
+
+		Parameters:-
+			no : The number of packages to be considered
+			basecost: The basecost of delivery, same for all packages
+
+		The tool will next prompt and accepts further inputs as formatted below,
+
+		PackageID Weight Distance Offercode
+
+		The above will need to be entered, repeteadly based on the original input
+		Post that the inputs for the Delivery time calculation as below,
+
+		NoOfVehicles MaxWeightPerVehicle MaxWeightPerVehicle
+*/
 package main
 
 import (
