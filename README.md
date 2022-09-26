@@ -5,7 +5,7 @@ The purpose of the project is to address the exercise problem, as documented [he
 ## Contents
 	
 
- - [Development Build](#development-build)
+ - [Build](#build)
  - [Documentation](#documentation)
  - [Project Structure](#project-structure)
 	 - [cmd (Commands) ](#cmd)
@@ -16,7 +16,7 @@ The purpose of the project is to address the exercise problem, as documented [he
 		 - [package trip](#4.-package-trip)
  - [Other](#other)
 
-## Development Build
+## Build
 
 TBA
 
