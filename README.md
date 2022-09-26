@@ -5,25 +5,32 @@ The purpose of the project is to address the exercise problem, as documented [he
 ## Contents
 	
 
- - [Dev Build] (#dev-build)
+ - [Dev Build] (#development-build)
  - Documentation (#documentation)
  - [Project Structure](#project-structure)
+	 - [cmd](#cmd)
+	 - [internal](#internal)
+		 - [package cargo](#package-cargo)
+		 - [package offer](#package-offer)
+		 - [package transport](#package-transport)
+		 - [package trip](#package-trip)
  - [Other](#other)
 
-## Dev Build
+## Development Build
 
 TBA
 
 ## Documentation
 		Can be autogeneratd with godoc
 		Run,
+		
 > 		godoc -http=:6060
 
 ## Project Structure
 
 List of packages/Modules.
 
-### cmd (/cmd)
+### /cmd
 Has two commands cost (/cmd/cost/cost.go) and time (/cmd/time/time.go). 
 #### cost.go
 dommand line tool to generate delivery cost for the given number of packages
@@ -64,7 +71,7 @@ Post that the inputs for the Delivery time calculation as below,
 
 > NoOfVehicles MaxWeightPerVehicle MaxWeightPerVehicle
 
-## Internal
+## /internal
 
 Contains all the Project packages (Business)
 
@@ -76,4 +83,3 @@ TBA
 TBA
 #### package trip
 TBA
-
