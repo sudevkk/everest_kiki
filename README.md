@@ -101,9 +101,9 @@ Returns a New [cargo.Box]
 Package deals with the Offers/Discount Coupons etc.
 A Global for holding the available list of Offercodes and details as a Key-Value pair is used. Assuming only initialized once during init and only reads post that, (Thus, though [offers] is not threadsafe, is not a problem here).
 *TODO:*
-The actual implementation will involve persisting the Offer/Coupon data in DB etc. And also since this information will be something that will get fetched frequently (On each consignment addition), to reduce the actual DB reads this can be cached. Possible possible caching strategy: Use a Redis or some in-memory store to save the Coupon/Offer data. On application bootstrap the DB can be read and all the info can be Written to Redis (Offer code as Key). Will need a Mechanism/Service to check and invalidate codes from Redis as needed based on diff criteria (Code Expiry, Max allowed usage exhausted for a code etc)
+*The actual implementation will involve persisting the Offer/Coupon data in DB etc. And also since this information will be something that will get fetched frequently (On each consignment addition), to reduce the actual DB reads this can be cached. Possible possible caching strategy: Use a Redis or some in-memory store to save the Coupon/Offer data. On application bootstrap the DB can be read and all the info can be Written to Redis (Offer code as Key). Will need a Mechanism/Service to check and invalidate codes from Redis as needed based on diff criteria (Code Expiry, Max allowed usage exhausted for a code etc)*
 
-For simplicity the persistence/caching is not done here, instead a simple in memory list of Maps holds the list of Codes that will be used directly.
+*For simplicity the persistence/caching is not done here, instead a simple in memory list of Maps holds the list of Codes that will be used directly.*
 
 #### Index
 [func  DiscountByCode(offerCode string, d float64, weight float64, amount *money.Money) (*money.Money, bool)]()
@@ -176,4 +176,57 @@ Package deals with the Trip (Delivery of selected consignments) Manages the Sche
 	 - [func  New(v []Vehicle) Trip]() 	
 	 - [func (t Trip) RunSchedule(consignments []transport.Consignment)]()
 
-TBA
+###### type  Vehicle
+
+    // The Vehicle entity
+    
+    type  Vehicle  struct {
+    
+    ID int
+    
+    MaxLoadWeight float64  // The maximum weight in KGs the vehicle can carry
+    
+    Speed float64  // Speed KM/HR (Assuming constant speed)
+    
+    }
+###### type  FleetVehicle
+A [trip.Vehicle] that is added to a [trip.Trip]
+
+    type  FleetVehicle  struct {
+    
+    Vehicle
+    
+    CurrentLoadWeight float64
+    
+    NextAvailableFrom time.Time
+    
+    consignments []transport.Consignment
+    
+    }
+###### type  Fleet
+The collection of assets used for a [trip.Trip]. 
+
+Vehicles are saved as an [RB tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) for simplicity
+
+    type  Fleet  struct {
+    
+    Vehicles *rbt.Tree // List of available Vehicles in the Fleet (Stored as a RB Tree)
+    
+    }
+###### type  Trip
+Represents a Trip / delivery route. The scheduling and other actions happens on a [trip.Trip]
+
+    type  Trip  struct {
+    
+    fleet Fleet
+    
+    startTime time.Time // Only Used for the simulation time for schedule
+    
+    }
+
+###### func RunSchedule
+Runs a scheduling (simulated) for a given list of consignements on the current [trip.Trip]
+The consignments are sorted on Weight and Distance.
+The scheduler utilises the RB tree of vehicle nodes to do the assignment in priority
+The complexity (n logn * n). This can be likely optimised further and not attempted.
+
