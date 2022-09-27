@@ -86,4 +86,5 @@ func main() {
 
 	deliveryRoute := trip.New(allVehicles)
 	deliveryRoute.RunSchedule(consignments)
+	deliveryRoute.PrintSchedule()
 }

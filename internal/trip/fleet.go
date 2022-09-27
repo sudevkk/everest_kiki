@@ -2,6 +2,8 @@ package trip
 
 import (
 	"math"
+	"strconv"
+	"strings"
 	"time"
 
 	rbt "github.com/emirpasic/gods/trees/redblacktree"
@@ -13,37 +15,36 @@ type FleetVehicle struct {
 	Vehicle
 	CurrentLoadWeight float64
 	NextAvailableFrom time.Time
+	consignments      []transport.Consignment
 }
 
 // The collection of assets used for a [trip.Trip]
 // Vehicles are saved as an RBT tree for simplicity
 type Fleet struct {
-	Vehicles             *rbt.Tree // List of available Vehicles in the Fleet (Stored as a RB Tree)
-	nextAvailableVehicle int
+	Vehicles *rbt.Tree // List of available Vehicles in the Fleet (Stored as a RB Tree)
 }
 
 // Add a [trip.Vehicle] to a [trip.Fleet]
-func (f Fleet) AddVehicle(v Vehicle) {
+func (f Fleet) AddVehicle(v Vehicle, nextAvailableTime time.Time) {
 
 	fleetV := FleetVehicle{
 		Vehicle:           v,
 		CurrentLoadWeight: 0,
-		NextAvailableFrom: time.Now(),
+		NextAvailableFrom: nextAvailableTime,
 	}
-	f.Vehicles.Put(v.ID, fleetV)
+	f.Vehicles.Put(strconv.Itoa(v.ID)+"-"+strconv.Itoa(int(fleetV.NextAvailableFrom.Unix()))+"-"+strconv.Itoa(int(v.MaxLoadWeight)), fleetV)
 }
 
 // Returns a new [trip.Fleet]
 // Accepts a list of [trip.Vehicle] as a param, and adds those to the [trip.Fleet]'s [trip.Fleet]
-func NewFleet(vehicles []Vehicle) Fleet {
+func NewFleet(vehicles []Vehicle, startTime time.Time) Fleet {
 
 	var f Fleet = Fleet{
-		nextAvailableVehicle: 0,
-		Vehicles:             rbt.NewWith(byAvailableTimeAndCapacity),
+		Vehicles: rbt.NewWith(byAvailableTimeAndCapacity),
 	}
 
 	for _, v := range vehicles {
-		f.AddVehicle(v)
+		f.AddVehicle(v, startTime)
 	}
 	return f
 }
@@ -51,29 +52,66 @@ func NewFleet(vehicles []Vehicle) Fleet {
 // Custom comparator (sort by Available time (Immediate) and Max Capacity (Small))
 // Sorts based on the Immediate Available Vehicle and for vehicles available at the same one the one with the less
 // MaxLoading capacity. The vehicle that already has a load, and not exhausted the capacity gets first priority.
+// TODO: Use Value for comparison and avaoid splitting etc. Ignored errors for now. Not Thread safe
 func byAvailableTimeAndCapacity(a, b interface{}) int {
 
-	c := a.(FleetVehicle)
-	d := b.(FleetVehicle)
+	c := a.(string)
+	d := b.(string)
 
-	// d  = 1c = -1
-	if c.CurrentLoadWeight > 0 && (c.CurrentLoadWeight < c.MaxLoadWeight) && d.CurrentLoadWeight == 0 {
-		return -1
-	} else if d.CurrentLoadWeight > 0 && d.CurrentLoadWeight < d.MaxLoadWeight && c.CurrentLoadWeight == 0 {
-		return 1
+	if c == d {
+		return 0
 	}
+	// Commented intentionally. Skipping for a simpler comparison logic for now
+	/*
+		if c.CurrentLoadWeight > 0 && (c.CurrentLoadWeight < c.MaxLoadWeight) && d.CurrentLoadWeight == 0 {
+			return -1
+		} else if d.CurrentLoadWeight > 0 && d.CurrentLoadWeight < d.MaxLoadWeight && c.CurrentLoadWeight == 0 {
+			return 1
+		}
 
-	if c.NextAvailableFrom.Equal(d.NextAvailableFrom) {
-		if c.MaxLoadWeight > d.MaxLoadWeight {
+		if c.NextAvailableFrom.Equal(d.NextAvailableFrom) {
+			if c.MaxLoadWeight > d.MaxLoadWeight {
+				return 1
+			} else {
+				return 0
+			}
+		} else if c.NextAvailableFrom.After(d.NextAvailableFrom) {
 			return 1
 		} else {
-			return 0
+			return -1
 		}
-	} else if c.NextAvailableFrom.After(d.NextAvailableFrom) {
-		return 1
-	} else {
+	*/
+
+	keySplitOne := strings.Split(c, "-")
+	keySplitTwo := strings.Split(d, "-")
+	var availableWeightTwo = 0.0
+	availableWeightOne, _ := strconv.ParseFloat(keySplitOne[2], 64)
+	availableWeightTwo, _ = strconv.ParseFloat(keySplitTwo[2], 64)
+
+	unixOne, error := strconv.Atoi(keySplitOne[1])
+
+	if error != nil {
+		unixTwo, error := strconv.Atoi(keySplitTwo[1])
+		if error != nil {
+			if unixOne < unixTwo && availableWeightOne > 0 {
+				return -1
+			} else {
+				if unixOne > unixTwo && availableWeightTwo > 0 {
+					return 1
+				}
+			}
+		}
+	}
+
+	if availableWeightOne > 0 && availableWeightOne < availableWeightTwo {
 		return -1
 	}
+
+	if availableWeightTwo > 0 && availableWeightTwo < availableWeightOne {
+		return 1
+	}
+
+	return 1
 }
 
 // Returns the next available [fleet.FleetVehicle] from the [trip.Trip] for the given weight (KG)
@@ -100,11 +138,14 @@ func (f Fleet) addConsignment(c *transport.Consignment) bool {
 
 	if isVehicleAvailable {
 		vehicle := vehicleNode.Value.(FleetVehicle)
+		f.Vehicles.Remove(vehicleNode.Key)
 		vehicle.CurrentLoadWeight = vehicle.CurrentLoadWeight + c.Box.Weight
 		timeNeededForDelivery := (math.Round((c.Distance/vehicle.Speed)*100) / 100) * 60 // Time needed for the delivery in Minutes
-		vehicle.NextAvailableFrom.Add(time.Hour * time.Duration(timeNeededForDelivery))
-		f.Vehicles.Put(vehicle.ID, vehicle)
+		vehicle.NextAvailableFrom = vehicle.NextAvailableFrom.Add(time.Minute * time.Duration(timeNeededForDelivery))
+		vehicle.consignments = append(vehicle.consignments, *c)
+		availableLoad := vehicle.MaxLoadWeight - vehicle.CurrentLoadWeight
+		f.Vehicles.Put(strconv.Itoa(vehicle.ID)+"-"+strconv.Itoa(int(vehicle.NextAvailableFrom.Unix()))+"-"+strconv.Itoa(int(availableLoad)), vehicle)
 	}
 
-	return false
+	return true
 }
