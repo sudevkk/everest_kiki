@@ -5,7 +5,7 @@ The purpose of the project is to address the exercise problem, as documented [he
 ## Contents
 	
 
- - [Build](#build)
+ - [Build & Tests](#build)
  - [Documentation](#documentation)
  - [Project Structure](#project-structure)
 	 - [cmd (Commands) ](#cmd)
