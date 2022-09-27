@@ -16,9 +16,12 @@ The purpose of the project is to address the exercise problem, as documented [he
 		 - [package trip](#4.-package-trip)
  - [Other](#other)
 
-## Build
+## Build and Tests
 
 TBA
+
+(Makefile is added but incomplete. do _go run_/_build_ directly)
+Tests: Example tests at _/cmd/cost_ and _/cms/time_ 
 
 ## Documentation
 Can be auto generatd with godoc
