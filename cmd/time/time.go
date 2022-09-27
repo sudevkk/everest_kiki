@@ -44,12 +44,11 @@ type timerInputs struct {
 }
 
 func main() {
-
 	boxParams := make([]costInputs, 0)
 	var vehicleParams timerInputs
 	paramNoOfPackages := flag.Int("no", 0, "No Of Packages")
 	paramBaseCost := flag.Float64("basecost", 0, "Base cost for the delivery")
-	var consignments []transport.Consignment
+
 	flag.Parse()
 
 	// TODO: Keep only CMD Parsing here and avoid the Switch and move rest to internal, to specific modules
@@ -61,12 +60,20 @@ func main() {
 		boxParams = append(boxParams, input)
 	}
 
+	fmt.Scanf("%d %f %f", &vehicleParams.noOfVehicles, &vehicleParams.maxSpeed, &vehicleParams.maxCarriableWeight)
+
+	costerAndTimer(*paramBaseCost, boxParams, vehicleParams)
+}
+
+func costerAndTimer(paramBaseCost float64, boxParams []costInputs, vehicleParams timerInputs) {
+
+	var consignments []transport.Consignment
 	for _, input := range boxParams {
 		box := &cargo.Box{ID: input.packageID, Weight: input.weight}
 		consignment := transport.NewConsignment(box)
 		consignment.SetDistance(input.distance)
 
-		baseCost := money.NewFromFloat(*paramBaseCost, money.USD)
+		baseCost := money.NewFromFloat(paramBaseCost, money.USD)
 		consignment.SetCostingStratergy(transport.StandardCosting{
 			Baseprice: baseCost,
 			Offercode: input.offercode,
@@ -75,8 +82,6 @@ func main() {
 		consignments = append(consignments, *consignment)
 		// fmt.Printf("%s %s %s \n", consignment.Box.ID, consignment.Discount.Display(), consignment.Cost.Display())
 	}
-
-	fmt.Scanf("%d %f %f", &vehicleParams.noOfVehicles, &vehicleParams.maxSpeed, &vehicleParams.maxCarriableWeight)
 
 	var allVehicles []trip.Vehicle
 

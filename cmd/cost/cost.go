@@ -35,12 +35,11 @@ type costInputs struct {
 }
 
 func main() {
-
-	boxParams := make([]costInputs, 0)
 	paramNoOfPackages := flag.Int("no", 0, "No Of Packages")
 	paramBaseCost := flag.Float64("basecost", 0, "Base cost for the delivery")
-
 	flag.Parse()
+
+	boxParams := make([]costInputs, 0)
 
 	// TODO: Keep only CMD Parsing here and avoid the Switch and move rest to internal, to specific modules
 	// Have some kind of Injection of commands from the Modules and make this dynamic than 'Switching' here.
@@ -51,12 +50,16 @@ func main() {
 		boxParams = append(boxParams, input)
 	}
 
+	coster(*paramNoOfPackages, *paramBaseCost, boxParams)
+}
+
+func coster(paramNoOfPackages int, paramBaseCost float64, boxParams []costInputs) {
 	for _, input := range boxParams {
 		box := &cargo.Box{ID: input.packageID, Weight: input.weight}
 		consignment := transport.NewConsignment(box)
 		consignment.SetDistance(input.distance)
 
-		baseCost := money.NewFromFloat(*paramBaseCost, money.USD)
+		baseCost := money.NewFromFloat(paramBaseCost, money.USD)
 		consignment.SetCostingStratergy(transport.StandardCosting{
 			Baseprice: baseCost,
 			Offercode: input.offercode,

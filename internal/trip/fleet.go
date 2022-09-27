@@ -121,13 +121,17 @@ func (f Fleet) GetAvailableVehicleNode(weight float64) (*rbt.Node, bool) {
 
 	// if vehicle {
 	// Iterate and fetch from the from the tree until the current weight can be added to an available vehicle
-	for vehicle := leftNode.Value.(FleetVehicle); vehicle.CurrentLoadWeight+weight > vehicle.MaxLoadWeight; {
-		leftNode, vehicle = leftNode.Right, leftNode.Value.(FleetVehicle)
+	for vehicle := leftNode.Value.(FleetVehicle); leftNode != nil && vehicle.CurrentLoadWeight+weight > vehicle.MaxLoadWeight; {
+		if leftNode != nil {
+			leftNode, vehicle = leftNode.Right, leftNode.Value.(FleetVehicle)
+		}
 	}
 	// }
 
-	if vehicle := leftNode.Value.(FleetVehicle); vehicle.CurrentLoadWeight+weight <= vehicle.MaxLoadWeight {
-		return leftNode, true
+	if leftNode != nil {
+		if vehicle := leftNode.Value.(FleetVehicle); vehicle.CurrentLoadWeight+weight <= vehicle.MaxLoadWeight {
+			return leftNode, true
+		}
 	}
 	return leftNode, false
 }

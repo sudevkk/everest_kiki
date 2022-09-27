@@ -50,8 +50,6 @@ func (t Trip) RunSchedule(consignments []transport.Consignment) {
 		return false
 	})
 
-	fmt.Printf("%v \n", consignments)
-
 	for _, c := range consignments {
 		t.fleet.addConsignment(&c)
 	}
@@ -63,6 +61,7 @@ func (t Trip) PrintSchedule() {
 		packageID    string
 		cost         *money.Money
 		deliveryTime time.Duration
+		discount     *money.Money
 	}
 	var packageSchedules []scheduleOutput
 	it := t.fleet.Vehicles.Iterator()
@@ -73,12 +72,12 @@ func (t Trip) PrintSchedule() {
 		if fleetVehicle.CurrentLoadWeight > 0 {
 			for _, c := range fleetVehicle.consignments {
 				deliveryTime := fleetVehicle.NextAvailableFrom.Sub(t.startTime)
-				packageSchedules = append(packageSchedules, scheduleOutput{packageID: c.Box.ID, cost: c.Cost, deliveryTime: deliveryTime})
+				packageSchedules = append(packageSchedules, scheduleOutput{packageID: c.Box.ID, cost: c.Cost, deliveryTime: deliveryTime, discount: c.Discount})
 			}
 		}
 	}
 
 	for _, v := range packageSchedules {
-		fmt.Printf("%s %s %v \n", v.packageID, v.cost.Display(), v.deliveryTime)
+		fmt.Printf("%s %s %s %v \n", v.packageID, v.discount.Display(), v.cost.Display(), v.deliveryTime)
 	}
 }
